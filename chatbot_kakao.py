@@ -19,8 +19,7 @@ def aichatbot(user_id, we_id, chat_request):
     df['cos'] = co_result
     df_result = df.sort_values('cos', ascending=False)
     print(df_result)
-    r = random.randint(0, 1)
-    x = df_result.iloc[r]['Q']
+    x = df_result.iloc[0]['Q']
     return_sentence = x.replace("\n", "")
-    print('return_sentence', return_sentence)
+    print(return_sentence)
     return return_sentence
