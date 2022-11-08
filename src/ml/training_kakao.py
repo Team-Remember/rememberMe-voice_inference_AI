@@ -66,14 +66,13 @@ def katalk_msg_parse(kakao_before_contents):
 def pretreatment_line(before):
     # 전처리
     only_BMP_pattern = re.compile("["u"\U00010000-\U0010FFFF""]+", flags=re.UNICODE)  # 이모티콘
-    # url = re.compile(r'[- ]*http+[s]*://+[a-zA-Z0-9-_.?=/&]*') # url
     text = re.sub('이모티콘', '', before)
     text = re.sub('\n', ' ', text)
     text = re.sub(only_BMP_pattern, ' ', text)
-    text = re.sub(r'http\S+', '', text)
+    text = re.sub(r'http\S+', '', text)# url
     text = re.sub('사진', '', text)
     text = re.sub('음성메시지', '', text)
-    text = re.sub('샵검색 : #', '', text) + ' 이거 검색해 봐'
+    # text = re.sub('샵검색 : #', '', text) + ' 이거 검색해 봐'
     text = re.sub('ㅋ', '', text)
     text = re.sub('삭제된 메시지입니다.', '', text)
     text = re.sub(r'파일: [a-zA-Z0-9.?/&=:가-힣]*' + '.' + r'[a-zA-Z0-9.?/&=:가-힣]*', '', text)
@@ -127,23 +126,30 @@ def make_model_input_form(my_katalk_df):
         Q_length = len(Q_list)
         A_list = A_list[:Q_length]
 
+    # q에 a, a에 q append
+    tmp_list = list()
+    tmp_list = A_list.copy()
+    A_list.extend(Q_list)
+    Q_list.extend(tmp_list)
+
+
     # 반환할 데이터 프레임 만들기
     result_dataframe = pd.DataFrame({'Q': Q_list, 'A': A_list})
 
-    result_dataframe.to_csv('result_dataframe.csv', index=None)
+    # result_dataframe.to_csv('result_dataframe1.csv', index=None)
     return result_dataframe
 
 
-def embedding(dataframe):
+def embedding(dataframe, member_id, we_id):
     embeding_list = []
     for temp in tqdm(dataframe['A']):
         embed_temp = model.encode(temp)
         embeding_list.append(embed_temp)
 
-    df_embeding = pd.DataFrame(embeding_list)
-    print(df_embeding)
-    df_embeding.to_csv('embeding2.csv', header=None, index=None)
-
+    # df_embeding = pd.DataFrame(embeding_list)
+    dataframe['chatvector'] = embeding_list
+    dataframe.to_csv(f'embeding_result_{member_id}_{we_id}.csv', index=None)
+    return f'embeding_result_{member_id}_{we_id}.csv'
 
 import re
 
