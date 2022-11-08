@@ -142,7 +142,7 @@ def make_model_input_form(my_katalk_df):
 
 def embedding(dataframe, member_id, we_id):
     embeding_list = []
-    for temp in tqdm(dataframe['A']):
+    for temp in tqdm(dataframe['Q']):
         embed_temp = model.encode(temp)
         embeding_list.append(embed_temp)
 

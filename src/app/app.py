@@ -15,4 +15,6 @@ app = FastAPI(
 
 app.include_router(routers.router, prefix="", tags=[''])
 
+# 서버 실행시
 # uvicorn src.app.app:app --reload --host=0.0.0.0 --port=8001
+# http://127.0.0.1:8001/docs#/

@@ -1,15 +1,13 @@
 from datetime import datetime
-from elasticsearch import Elasticsearch, helpers
-import pandas as pd
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-import random
-import csv
+
 import numpy as np
+import pandas as pd
+from elasticsearch import Elasticsearch
+from sentence_transformers import SentenceTransformer
 
 # model = SentenceTransformer('sentence-transformers/xlm-r-100langs-bert-base-nli-stsb-mean-tokens')
 model = SentenceTransformer('jhgan/ko-sroberta-multitask')
-df = pd.read_csv('embeding_result_1.0_2.0.csv')
+
 # 지수로그 없애기 위해 소수점 6자리까지만
 np.set_printoptions(precision=6, suppress=True)
 
@@ -19,7 +17,7 @@ url = 'http://localhost:9200/'
 
 def make_mappings():
     es = Elasticsearch(hosts=[url], basic_auth=('elastic', 'rlagksgh'), )
-    index_name = 'chatdata1'
+    index_name = 'chat_bot'
 
     mappings = {
         "settings": {
@@ -33,10 +31,10 @@ def make_mappings():
             },
             "properties": {
                 "member_id": {
-                    "type": "text"
+                    "type": "integer"
                 },
                 "we_id": {
-                    "type": "text"
+                    "type": "integer"
                 },
                 "Q": {
                     "type": "text"
@@ -60,46 +58,26 @@ def make_mappings():
 
 def delete_mapping():
     es = Elasticsearch(hosts=[url], basic_auth=('elastic', 'rlagksgh'), )
-    index_name = 'chatdata1'
+    index_name = 'chat_bot'
 
     es.options(ignore_status=[400, 404]).indices.delete(index=index_name)
 
 
-def make_chatdata():
+def insert_chatdata_es(embedding_result_csv_name, member_id, we_id):
     es = Elasticsearch(hosts=[url], basic_auth=('elastic', 'rlagksgh'), )
-
-    index = "chatdata1"
-    count = 0
-    for temp1, temp in zip(df['A'], df['Q']):
-        t = model.encode(temp)
-
-        doc = {
-            "member_id": 1,
-            "we_id": 2,
-            "Q": temp,
-            "A": temp1,
-            "chatvector": t[0:512],
-            "@timestamp": datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')
-        }
-
-        count = count + 1
-
-        es.index(index=index, body=doc)
-
-
-def make_chatdata_nk(embedding_result_csv_name, memberId, weId):
-    es = Elasticsearch(hosts=[url], basic_auth=('elastic', 'rlagksgh'))
-
     df = pd.read_csv(embedding_result_csv_name)
-    index = "chatdata1"
+    index = "chat_bot"
     count = 0
     for temp1, temp, temp2 in zip(df['A'], df['Q'], df['chatvector']):
+        # chatvector 에 값을 넣기 위해서 str > replace > list > float 으로 변환.
+        list_of_string = temp2.replace('[', '').replace(']', '').split()[0:512]
+        list_of_float = list(map(float, list_of_string))
         doc = {
-            "member_id": 1,
-            "we_id": 2,
+            "member_id": member_id,
+            "we_id": we_id,
             "Q": temp,
             "A": temp1,
-            "chatvector": temp2[0:512],
+            "chatvector": list_of_float,
             "@timestamp": datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')
         }
 
@@ -108,16 +86,29 @@ def make_chatdata_nk(embedding_result_csv_name, memberId, weId):
         es.index(index=index, body=doc)
 
 
-def loadchat(textdata):
+def loadchat(member_id, we_id, textdata):
     es = Elasticsearch(hosts=[url], basic_auth=('elastic', 'rlagksgh'), )
-    index = "chatdata1"
+    index = "chat_bot"
     textembeding = model.encode(textdata)
     s_body = {
         "query": {
             "script_score": {
-
                 "query": {
-                    "match_all": {}
+                    "bool": {
+                        "should": [
+                            {
+                                "match_phrase": {
+                                    "member_id": member_id
+                                }
+                            },
+                            {
+                                "match_phrase": {
+                                    "we_id":  we_id
+
+                                }
+                            }
+                        ]
+                    },
                 },
                 "script": {
                     "source": "cosineSimilarity(params.query_vector, 'chatvector') + 1.0",
@@ -128,7 +119,15 @@ def loadchat(textdata):
     }
 
     res = es.search(index=index, body=s_body)
-    return res
+
+    if len(res['hits']['hits']) == 0:
+        return "챗봇의 데이터가 충분하지 않습니다. 카카오톡 데이터를 넣어주세요!"
+
+    if res['hits']['hits'][0]['_score'] >= 1.7:
+        return_sentence = res['hits']['hits'][0]['_source']['A']
+    else:
+        return_sentence = '미안해요.. 당신의 말을 이해하지 못했어요..'
+    return return_sentence
 
 
 if __name__ == "__main__":
@@ -137,10 +136,8 @@ if __name__ == "__main__":
     start = time.time()  # 시작 시간 저장
     # make_mappings()  # 1번 테이블생성
     # make_chatdata()   #2번 챗봇데이터 테이블에 입력
-    make_chatdata_nk('embeding_result_1.0_2.0.csv', 1.0, 2.0)
+    # insert_chatdata_es('embeding_result_1.0_2.0.csv', 2, 3)
     # delete_mapping() # 테이블 삭제
-    # result = loadchat('안녕')
-    # print(result)
-    # print(result['hits']['hits'][random.randint(0,len(result['hits']['hits']))]['_source']['A'])
-
+    result = loadchat(3,4,'지렸다.')
+    print(result)
     print("time :", time.time() - start)
