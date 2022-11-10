@@ -3,11 +3,13 @@ from sentence_transformers import SentenceTransformer
 
 # 한국어 bert 모델 불러오기
 from tqdm import tqdm
+import re
 
 model = SentenceTransformer('jhgan/ko-sroberta-multitask')
 
 
-def pretreatment(files):
+# 카카오톡 파일 전처리
+def pretreatment_kakao_file(files):
     pretreatment_result = list()
     kakao_before_contents = ''
     for file in files:
@@ -45,7 +47,7 @@ def katalk_msg_parse(kakao_before_contents):
             user_text = line[1].split(" : ", maxsplit=1)
             user_name = user_text[0].strip()
             text = user_text[1].strip().replace("\n", "")
-            text = pretreatment_line(text) # 전처리
+            text = pretreatment_line(text)  # 전처리
 
             my_katalk_data.append({
                 'user_name': user_name,
@@ -69,7 +71,7 @@ def pretreatment_line(before):
     text = re.sub('이모티콘', '', before)
     text = re.sub('\n', ' ', text)
     text = re.sub(only_BMP_pattern, ' ', text)
-    text = re.sub(r'http\S+', '', text)# url
+    text = re.sub(r'http\S+', '', text)  # url
     text = re.sub('사진', '', text)
     text = re.sub('음성메시지', '', text)
     # text = re.sub('샵검색 : #', '', text) + ' 이거 검색해 봐'
@@ -84,13 +86,14 @@ def pretreatment_line(before):
     return after
 
 
+# input 데이터프레임으로 변형
 def make_model_input_form(my_katalk_df):
     df = my_katalk_df
     df['counter'] = 0
 
     counter = 0
 
-    ## 현재 화자와 다음 화자가 다른 경우, counter를 증가시킨다.
+    # 현재 화자와 다음 화자가 다른 경우, counter를 증가시킨다.
     for i in range(1, len(df)):
         current_person = df.iloc[i]['user_name']
         next_person = df.iloc[i - 1]['user_name']
@@ -101,10 +104,10 @@ def make_model_input_form(my_katalk_df):
     # 화자와 counter를 더해 message_idx를 만든다.
     df['message_idx'] = df.user_name.astype(str) + "-" + df.counter.astype(str)
 
-    ## counter와 message_idx로 그룹바이하여 문장을 리스트로 묶는다.
+    # counter와 message_idx로 그룹바이하여 문장을 리스트로 묶는다.
     parsed = pd.DataFrame(df.groupby(['counter', 'message_idx'])['text'].apply(list))
 
-    ## 묶은 라인을 하나의 스트링으로 합치고 줄바꿈을 마지막에 붙인다.
+    # 묶은 라인을 하나의 스트링으로 합치고 줄바꿈을 마지막에 붙인다.
     parsed['line2'] = parsed['text'].map(lambda x: " ".join(x).strip())
     pared_line2_list = parsed['line2'].to_list()
     parsing_list = list(filter(None, pared_line2_list))  # 빈칸 제거
@@ -127,11 +130,9 @@ def make_model_input_form(my_katalk_df):
         A_list = A_list[:Q_length]
 
     # q에 a, a에 q append
-    tmp_list = list()
     tmp_list = A_list.copy()
     A_list.extend(Q_list)
     Q_list.extend(tmp_list)
-
 
     # 반환할 데이터 프레임 만들기
     result_dataframe = pd.DataFrame({'Q': Q_list, 'A': A_list})
@@ -140,7 +141,7 @@ def make_model_input_form(my_katalk_df):
     return result_dataframe
 
 
-def embedding(dataframe, member_id, we_id):
+def embedding_csv(dataframe, member_id, we_id):
     embeding_list = []
     for temp in tqdm(dataframe['Q']):
         embed_temp = model.encode(temp)
@@ -151,46 +152,118 @@ def embedding(dataframe, member_id, we_id):
     dataframe.to_csv(f'embeding_result_{member_id}_{we_id}.csv', index=None)
     return f'embeding_result_{member_id}_{we_id}.csv'
 
-import re
 
+# input 데이터프레임으로 변형
+def make_model_input_form_from_db(db_data):
+    db_list = []
 
-def ck_url(x):
-    # url에 대한 정규식
-    re_equ = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0- 9.\-]+[.][az]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\() [^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>])+\ )))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”'']))"
-    ck_url = re.findall(re_equ, x)
-    if ck_url:
-        return "문자열의 URL: ", [i[0] for i in ck_url]
-    else:
-        return "URL이 없습니다!"
-        # ip_str = input("문자열을 입력하세요: ") print(ck_url(ip_str) ))
-# kakao_file = 'kakaolist1'
-#
-# df = pd.read_csv(kakao_file+'.csv', encoding="utf-8")
-#
-# Date = 'Date'
-# User = 'user_name'
-# Message = 'text'
-#
-# df = df[df[Message] != '(이모티콘) ']
-#
-# pre_user = ''
-#
-# messages = []
-# user_message = ''
-#
-# for index, user in enumerate(df[User]):
-#
-#     try:
-#         if pre_user !=user:
-#             pre_user = user
-#             messages.append(user_message)
-#             user_message = ''
-#         user_message += df[Message][index]
-#     except:
-#         pass
-#
-# fp = open('converted.txt', 'a', encoding="utf-8")
-#
-# for message in messages:
-#     if message:
-#         fp.write(message.replace(':', '').replace(',', '') + '\n')
+    for x in db_data:
+        for y in range(1, len(x['data'])):
+            current_person = x['data'][y]['nickName']
+            next_person = x['data'][y - 1]['nickName']
+
+            if y == 1 and current_person == next_person:
+                db_list.append(x['data'][y - 1]['chatText'] + ' ' + x['data'][y]['chatText'])
+            elif y == 1 and current_person != next_person:
+                db_list.append(x['data'][y - 1]['chatText'])
+                db_list.append(x['data'][y]['chatText'])
+            elif y > 1 and current_person == next_person:
+                before_text = db_list.pop()
+                db_list.append(before_text + ' ' + x['data'][y]['chatText'])
+            elif y > 1 and current_person != next_person:
+                db_list.append(x['data'][y]['chatText'])
+
+    print(db_list)
+
+    db_list = list(filter(None, db_list))  # 빈칸 제거
+    Q_list = list()
+    A_list = list()
+
+    # Q, A 분류
+    for index, sentence in enumerate(db_list):
+        if index % 2 == 0:
+            Q_list.append(sentence.strip())
+        else:
+            A_list.append(sentence.strip())
+
+    # 길이 맞추기
+    if len(Q_list) > len(A_list):
+        A_length = len(A_list)
+        Q_list = Q_list[:A_length]
+    elif len(A_list) > len(Q_list):
+        Q_length = len(Q_list)
+        A_list = A_list[:Q_length]
+
+    # q에 a, a에 q append
+    tmp_list = A_list.copy()
+    A_list.extend(Q_list)
+    Q_list.extend(tmp_list)
+
+    # 반환할 데이터 프레임 만들기
+    result_dataframe = pd.DataFrame({'Q': Q_list, 'A': A_list})
+
+    # result_dataframe.to_csv('result_dataframe3.csv', index=None)
+    return result_dataframe
+
+# if __name__ == '__main__':
+#     db_data = [
+#             {
+#                 "id": 10,
+#                 "data": [
+#                     {
+#                         "nickName": "dd",
+#                         "chatText": "안녕녕"
+#                     },
+#                     {
+#                         "nickName": "dd",
+#                         "chatText": "안녕녕"
+#                     },
+#                     {
+#                         "nickName": "dd",
+#                         "chatText": "안녕녕"
+#                     },
+#                     {
+#                         "nickName": "dd",
+#                         "chatText": "안녕녕"
+#                     },
+#                     {
+#                         "nickName": "dd",
+#                         "chatText": "화이팅"
+#                     }
+#                 ],
+#                 "memberId": 1,
+#                 "opponentId": 2
+#             },
+#             {
+#                 "id": 17,
+#                 "data": [
+#                     {
+#                         "nickName": "남경",
+#                         "chatText": "11"
+#                     },
+#                     {
+#                         "nickName": "회은",
+#                         "chatText": "2"
+#                     },
+#                     {
+#                         "nickName": "남경",
+#                         "chatText": "3"
+#                     },
+#                     {
+#                         "nickName": "남경",
+#                         "chatText": "43"
+#                     },
+#                     {
+#                         "nickName": "남경",
+#                         "chatText": "5"
+#                     },
+#                     {
+#                         "nickName": "남경",
+#                         "chatText": "6"
+#                     }
+#                 ],
+#                 "memberId": 1,
+#                 "opponentId": 3
+#             }
+#         ]
+#     make_model_input_form_from_db(db_data)
