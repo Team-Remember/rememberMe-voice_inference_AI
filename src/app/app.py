@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from logging import getLogger
 
-from src.app import routers
+from src.app import routers, routertest
 from src.configurations import APIConfigurations
 
 logger = getLogger(__name__)

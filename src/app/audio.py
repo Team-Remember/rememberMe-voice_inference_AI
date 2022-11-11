@@ -4,10 +4,8 @@ import speech_recognition as sr
 
 
 def byte_to_wav(byte_sound, user_id, we_id):
-
     with open(f'wav{user_id}_{we_id}.wav', mode='bx') as f:
         f.write(byte_sound)
-
 
 
 def stt(user_id, we_id):

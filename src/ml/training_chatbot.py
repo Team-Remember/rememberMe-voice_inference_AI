@@ -137,7 +137,6 @@ def make_model_input_form(my_katalk_df):
     # 반환할 데이터 프레임 만들기
     result_dataframe = pd.DataFrame({'Q': Q_list, 'A': A_list})
 
-    # result_dataframe.to_csv('result_dataframe1.csv', index=None)
     return result_dataframe
 
 
@@ -202,7 +201,6 @@ def make_model_input_form_from_db(db_data):
     # 반환할 데이터 프레임 만들기
     result_dataframe = pd.DataFrame({'Q': Q_list, 'A': A_list})
 
-    # result_dataframe.to_csv('result_dataframe3.csv', index=None)
     return result_dataframe
 
 # if __name__ == '__main__':

@@ -7,14 +7,14 @@ from logging import getLogger
 import time, math
 
 from fastapi.encoders import jsonable_encoder
-
+from fastapi.responses import FileResponse
 from elastic import insert_chatdata_es, loadchat
 from src.app.audio import byte_to_wav, stt
 from src.ml.filter import abuse_filtering
 from src.ml.training_chatbot import pretreatment_kakao_file, make_model_input_form, embedding_csv, \
     make_model_input_form_from_db
 from src.ml.voice_infrence import tts
-
+from starlette.background import BackgroundTasks
 import mlflow
 logging = getLogger(__name__)
 router = APIRouter()
@@ -22,7 +22,7 @@ router = APIRouter()
 
 # 챗봇 카카오톡 데이터 입력시 학습시키기
 @router.post("/chat_bot_train_kakao")
-async def chatbot_train(files: List[UploadFile] = File(...), memberId: str = "0", weId: float = "0"):
+async def chatbot_train(memberId: str, weId: str, files: List[UploadFile] = File(...)):
     start = time.time()
     # 카카오톡 파일 전처리
     my_katalk_df = pretreatment_kakao_file(files)
@@ -68,11 +68,11 @@ async def chatbot_database_train(request: Request):
 
 # 문자 챗봇
 @router.get("/chat_bot")
-def chatbot(memberId: str = "0", weId: str = "0", chatRequest: str = ''):
+def chatbot(memberId: int, weId: int, chatRequest: str = ''):
     print("request,", chatRequest)
     print('memberId', memberId, 'weId', weId)
-    memberId = int(float(memberId))
-    weId = int(float(weId))
+    # memberId = int(memberId)
+    # weId = int(weId)
     start = time.time()
     math.factorial(100000)
     # 욕설방지 필터링
@@ -92,13 +92,23 @@ def chatbot(memberId: str = "0", weId: str = "0", chatRequest: str = ''):
     return {"response": chat_response}
 
 
+def remove_file(path: str) -> None:
+    os.unlink(path)
+
 # 음성 챗봇
 @router.post("/voice_chat_bot_inference")
-def voice_chat_bot_inference(memberId: str = "0", weId: str = "0", voice: bytes = File()):
-    print('user_id', memberId, 'we_id', weId)
-    memberId = int(float(memberId))
-    weId = int(float(weId))
+async def voice_chat_bot_inference(request: Request, background_tasks: BackgroundTasks):
+    request_list = await request.form()
+
+    voice = request_list['voice'].file.read()
+    memberId = request_list['userId']
+    weId = request_list['weId']
     start = time.time()
+
+    print('voice', voice)
+    print('memberId', memberId)
+    print('weId', weId)
+
     # 목소리 byte to wav
     byte_to_wav(voice, memberId, weId)
 
@@ -123,18 +133,21 @@ def voice_chat_bot_inference(memberId: str = "0", weId: str = "0", voice: bytes 
     # tts
     tts_wav = tts(memberId, weId, chat_response)
 
-    # wav > byte
-    finish = time.time()
-    byte_list = list()
-    file = open(tts_wav, 'rb')
-    byteBuffer = bytearray(file.read())
-    byte_list.append(byteBuffer)
-    print(byteBuffer)
-    file.close()
+    background_tasks.add_task(remove_file, tts_wav)
 
-    # TODO: 음성 파일 삭제
-    os.remove(tts_wav)
-    print('최종', finish - start)
-    return byte_list
+    return FileResponse(tts_wav, media_type='audio/wav')
+    #
+    # # wav > byte
+    # finish = time.time()
+    # byte_list = list()
+    # file = open(tts_wav, 'rb')
+    # byteBuffer = bytearray(file.read())
+    # byte_list.append(byteBuffer)
+    # print(byteBuffer)
+    # file.close()
+    #
+    # # os.remove(tts_wav)
+    # print('최종', finish - start)
+    # return "hi"
 
 
