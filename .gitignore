@@ -16,3 +16,4 @@ data
 mlruns
 /src/model
 tensorflow_tts/
+fastspeech/

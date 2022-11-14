@@ -1,21 +1,21 @@
-import base64
+import math
 import os
+import time
+from logging import getLogger
+from typing import List
 
 from fastapi import APIRouter, File, UploadFile, Request
-from typing import List
-from logging import getLogger
-import time, math
-
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTasks
+
 from elastic import insert_chatdata_es, loadchat
+from fastspeech.synthesize import synthesize_voice
 from src.app.audio import byte_to_wav, stt
 from src.ml.filter import abuse_filtering
 from src.ml.training_chatbot import pretreatment_kakao_file, make_model_input_form, embedding_csv, \
     make_model_input_form_from_db
 from src.ml.voice_infrence import tts
-from starlette.background import BackgroundTasks
-import mlflow
+
 logging = getLogger(__name__)
 router = APIRouter()
 
@@ -71,15 +71,13 @@ async def chatbot_database_train(request: Request):
 def chatbot(memberId: int, weId: int, chatRequest: str = ''):
     print("request,", chatRequest)
     print('memberId', memberId, 'weId', weId)
-    # memberId = int(memberId)
-    # weId = int(weId)
     start = time.time()
     math.factorial(100000)
     # 욕설방지 필터링
-    filter = abuse_filtering(chatRequest, 0)
-
-    if filter is not None:
-        return filter
+    abuse_filter = abuse_filtering(chatRequest, 0)
+    print("None 이야?", abuse_filter)
+    if abuse_filter is not None:
+        return {"response": abuse_filter}
 
     fil = time.time()
     print('욕설 방지 시간', fil - start)
@@ -94,6 +92,7 @@ def chatbot(memberId: int, weId: int, chatRequest: str = ''):
 
 def remove_file(path: str) -> None:
     os.unlink(path)
+
 
 # 음성 챗봇
 @router.post("/voice_chat_bot_inference")
@@ -119,35 +118,27 @@ async def voice_chat_bot_inference(request: Request, background_tasks: Backgroun
     filter_abuse = abuse_filtering(voice_to_text, 1)
     fil = time.time()
 
-    if filter_abuse is not None:
-        return filter_abuse
-
     print(voice_to_text)
 
     # chatbot
     chat_response = loadchat(memberId, weId, voice_to_text)
     chat = time.time()
-    print('chat_response', chat_response)
+
     print('욕설 방지 시간', fil - start)
 
-    # tts
-    tts_wav = tts(memberId, weId, chat_response)
-
-    background_tasks.add_task(remove_file, tts_wav)
-
+    tts_wav = ''
+    # 욕설일 때 성우 tts
+    if filter_abuse is not None:
+        chat_response = filter_abuse
+        tts_wav = tts(memberId, weId, chat_response)
+    elif chat_response == '챗봇의 데이터가 충분하지 않습니다. 카카오톡 데이터를 넣어주세요!' or chat_response == '미안해요.. 당신의 말을 이해하지 못했어요..':
+        # 위의 안내 문구일 경우 성우 tts
+        tts_wav = tts(memberId, weId, chat_response)
+    else:
+        # 욕설이 아닐 때 회은이 목소리
+        tts_wav = synthesize_voice(chat_response)
+    final = time.time()
+    print('chat_response', chat_response)
+    print("최종 시간", final-start )
+    # background_tasks.add_task(remove_file, tts_wav)
     return FileResponse(tts_wav, media_type='audio/wav')
-    #
-    # # wav > byte
-    # finish = time.time()
-    # byte_list = list()
-    # file = open(tts_wav, 'rb')
-    # byteBuffer = bytearray(file.read())
-    # byte_list.append(byteBuffer)
-    # print(byteBuffer)
-    # file.close()
-    #
-    # # os.remove(tts_wav)
-    # print('최종', finish - start)
-    # return "hi"
-
-
