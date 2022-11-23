@@ -19,7 +19,7 @@ logger = getLogger(__name__)
 
 
 class APIConfigurations:
-    title = os.getenv("API_TITLE", "REMEMBER")
+    title = os.getenv("API_TITLE", "REMEMBERME_VOICE_INFERENCE")
     description = os.getenv("API_DESCRIPTION", "Remember You from your data")
     version = os.getenv("API_VERSION", "0.1")
 

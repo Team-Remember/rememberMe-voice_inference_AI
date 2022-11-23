@@ -15,5 +15,6 @@ data
 *.exe
 mlruns
 /src/model
-tensorflow_tts/
+#tensorflow_tts/
 fastspeech/
+results/
