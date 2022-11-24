@@ -1,0 +1,2 @@
+from model.tensorflow_tts.models.fastspeech import TFFastSpeech
+from model.tensorflow_tts.models.parallel_wavegan import TFParallelWaveGANGenerator

@@ -5,9 +5,9 @@ from logging import getLogger
 from fastapi import Request, BackgroundTasks, FastAPI
 from fastapi.responses import FileResponse
 
-from dl.stt import byte_to_wav, stt
-from dl.model.fastspeech.synthesize import synthesize_voice
-from dl.voice_infrence import tts
+from app.stt import byte_to_wav, stt
+from model.fastspeech.synthesize import synthesize_voice
+from app.voice_infrence import tts
 
 logging = getLogger(__name__)
 app = FastAPI()
