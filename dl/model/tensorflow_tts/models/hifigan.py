@@ -257,7 +257,7 @@ class TFHifiGANGenerator(BaseModel):
                 pass
 
     def _build(self):
-        """Build models by passing fake input."""
+        """Build model by passing fake input."""
         fake_mels = tf.random.uniform(shape=[1, 100, 80], dtype=tf.float32)
         self(fake_mels)
 

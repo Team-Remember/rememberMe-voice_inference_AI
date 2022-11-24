@@ -740,7 +740,7 @@ class TFTacotronDecoder(Decoder):
 
 
 class TFTacotron2(BaseModel):
-    """Tensorflow tacotron-2 models."""
+    """Tensorflow tacotron-2 model."""
 
     def __init__(self, config, **kwargs):
         """Initalize tacotron-2 layers."""

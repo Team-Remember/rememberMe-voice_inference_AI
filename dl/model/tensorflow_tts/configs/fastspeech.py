@@ -86,7 +86,7 @@ class FastSpeechConfig(BaseConfig):
         postnet_dropout_rate=0.1,
         **kwargs
     ):
-        """Init parameters for Fastspeech models."""
+        """Init parameters for Fastspeech model."""
         # encoder params
         if dataset == "ljspeech":
             self.vocab_size = vocab_size

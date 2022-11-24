@@ -1,11 +1,11 @@
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from scipy.io.wavfile import write
 
-from dl.model.tensorflow_tts.inference.auto_model import TFAutoModel
-from dl.model.tensorflow_tts.inference.auto_processor import AutoProcessor
+from dl.model.tensorflow_tts.inference import TFAutoModel, AutoProcessor
 
 sys.path.append("TensorFlowTTS/")
 
@@ -49,35 +49,35 @@ def do_synthesis(input_text, text2mel_model, vocoder_model, text2mel_name, vocod
         return mel_outputs.numpy(), audio.numpy()
 
 
-# def visualize_attention(alignment_history):
-#     import matplotlib.pyplot as plt
-#
-#     fig = plt.figure(figsize=(8, 6))
-#     ax = fig.add_subplot(111)
-#     ax.set_title(f'Alignment steps')
-#     im = ax.imshow(
-#         alignment_history,
-#         aspect='auto',
-#         origin='lower',
-#         interpolation='none')
-#     fig.colorbar(im, ax=ax)
-#     xlabel = 'Decoder timestep'
-#     plt.xlabel(xlabel)
-#     plt.ylabel('Encoder timestep')
-#     plt.tight_layout()
-#     plt.show()
-#     plt.close()
-#
-#
-# def visualize_mel_spectrogram(mels):
-#     mels = tf.reshape(mels, [-1, 80]).numpy()
-#     fig = plt.figure(figsize=(10, 8))
-#     ax1 = fig.add_subplot(311)
-#     ax1.set_title(f'Predicted Mel-after-Spectrogram')
-#     im = ax1.imshow(np.rot90(mels), aspect='auto', interpolation='none')
-#     fig.colorbar(mappable=im, shrink=0.65, orientation='horizontal', ax=ax1)
-#     plt.show()
-#     plt.close()
+def visualize_attention(alignment_history):
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111)
+    ax.set_title(f'Alignment steps')
+    im = ax.imshow(
+        alignment_history,
+        aspect='auto',
+        origin='lower',
+        interpolation='none')
+    fig.colorbar(im, ax=ax)
+    xlabel = 'Decoder timestep'
+    plt.xlabel(xlabel)
+    plt.ylabel('Encoder timestep')
+    plt.tight_layout()
+    plt.show()
+    plt.close()
+
+
+def visualize_mel_spectrogram(mels):
+    mels = tf.reshape(mels, [-1, 80]).numpy()
+    fig = plt.figure(figsize=(10, 8))
+    ax1 = fig.add_subplot(311)
+    ax1.set_title(f'Predicted Mel-after-Spectrogram')
+    im = ax1.imshow(np.rot90(mels), aspect='auto', interpolation='none')
+    fig.colorbar(mappable=im, shrink=0.65, orientation='horizontal', ax=ax1)
+    plt.show()
+    plt.close()
 
 
 def tts(user_id, we_id, chat_response):
@@ -86,5 +86,5 @@ def tts(user_id, we_id, chat_response):
 
     rate = 22050
     scaled = np.int16(audios / np.max(np.abs(audios)) * 32767)
-    write(f'./results/{user_id}_{we_id}.wav', rate, scaled)
-    return f'./results/{user_id}_{we_id}.wav'
+    write(f'{user_id}_{we_id}.wav', rate, scaled)
+    return f'{user_id}_{we_id}.wav'

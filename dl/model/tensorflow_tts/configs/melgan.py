@@ -38,7 +38,7 @@ class MelGANGeneratorConfig(BaseConfig):
         initializer_seed=42,
         **kwargs
     ):
-        """Init parameters for MelGAN Generator models."""
+        """Init parameters for MelGAN Generator model."""
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.filters = filters
@@ -75,7 +75,7 @@ class MelGANDiscriminatorConfig(object):
         initializer_seed=42,
         **kwargs
     ):
-        """Init parameters for MelGAN Discriminator models."""
+        """Init parameters for MelGAN Discriminator model."""
         self.out_channels = out_channels
         self.scales = scales
         self.downsample_pooling = downsample_pooling

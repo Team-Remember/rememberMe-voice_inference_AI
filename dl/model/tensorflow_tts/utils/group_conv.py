@@ -438,7 +438,7 @@ class GroupConv1D(Conv):
     If `use_bias` is True, a bias vector is created and added to the outputs.
     Finally, if `activation` is not `None`,
     it is applied to the outputs as well.
-    When using this layer as the first layer in a models,
+    When using this layer as the first layer in a model,
     provide an `input_shape` argument
     (tuple of integers or `None`, e.g.
     `(10, 128)` for sequences of 10 vectors of 128-dimensional vectors,
@@ -464,7 +464,7 @@ class GroupConv1D(Conv):
       padding: One of `"valid"`, `"causal"` or `"same"` (case-insensitive).
         `"causal"` results in causal (dilated) convolutions, e.g. `output[t]`
         does not depend on `input[t+1:]`. Useful when modeling temporal data
-        where the models should not violate the temporal order.
+        where the model should not violate the temporal order.
         See [WaveNet: A Generative Model for Raw Audio, section
           2.1](https://arxiv.org/abs/1609.03499).
       data_format: A string,

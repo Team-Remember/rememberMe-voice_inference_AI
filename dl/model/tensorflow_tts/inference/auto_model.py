@@ -62,7 +62,7 @@ TF_MODEL_MAPPING = OrderedDict(
 
 
 class TFAutoModel(object):
-    """General models class for inferencing."""
+    """General model class for inferencing."""
 
     def __init__(self):
         raise EnvironmentError("Cannot be instantiated using `__init__()`")
@@ -93,7 +93,7 @@ class TFAutoModel(object):
                 pretrained_path = downloaded_file
 
 
-        assert config is not None, "Please make sure to pass a config along to load a models from a local file"
+        assert config is not None, "Please make sure to pass a config along to load a model from a local file"
 
         for config_class, model_class in TF_MODEL_MAPPING.items():
             if isinstance(config, config_class) and str(config_class.__name__) in str(

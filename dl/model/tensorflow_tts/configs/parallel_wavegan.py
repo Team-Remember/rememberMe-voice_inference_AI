@@ -40,7 +40,7 @@ class ParallelWaveGANGeneratorConfig(BaseConfig):
         initializer_seed=42,
         **kwargs,
     ):
-        """Init parameters for ParallelWaveGAN Generator models."""
+        """Init parameters for ParallelWaveGAN Generator model."""
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.n_layers = n_layers
@@ -75,7 +75,7 @@ class ParallelWaveGANDiscriminatorConfig(object):
         apply_sigmoid_at_last=False,
         **kwargs,
     ):
-        "Init parameters for ParallelWaveGAN Discriminator models."
+        "Init parameters for ParallelWaveGAN Discriminator model."
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.n_layers = n_layers

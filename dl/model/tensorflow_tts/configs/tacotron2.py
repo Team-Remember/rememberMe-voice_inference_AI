@@ -61,7 +61,7 @@ class Tacotron2Config(BaseConfig):
         postnet_conv_kernel_sizes=5,
         postnet_dropout_rate=0.1,
     ):
-        """Init parameters for Tacotron-2 models."""
+        """Init parameters for Tacotron-2 model."""
         if dataset == "ljspeech":
             self.vocab_size = vocab_size
         elif dataset == "kss":

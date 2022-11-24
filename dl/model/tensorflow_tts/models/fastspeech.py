@@ -783,7 +783,7 @@ class TFFastSpeech(BaseModel):
         self.setup_inference_fn()
 
     def _build(self):
-        """Dummy input for building models."""
+        """Dummy input for building model."""
         # fake inputs
         input_ids = tf.convert_to_tensor([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]], tf.int32)
         speaker_ids = tf.convert_to_tensor([0], tf.int32)

@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Base Model for all models."""
+"""Base Model for all model."""
 
 import tensorflow as tf
 import yaml

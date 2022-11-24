@@ -12,7 +12,7 @@ from pathlib import Path
 
 import tensorflow as tf
 
-MODEL_FILE_NAME = "models.h5"
+MODEL_FILE_NAME = "model.h5"
 CONFIG_FILE_NAME = "config.yml"
 PROCESSOR_FILE_NAME = "processor.json"
 LIBRARY_NAME = "tensorflow_tts"
@@ -53,14 +53,14 @@ def _path_requires_gfile(filepath):
 
 
 def save_weights(model, filepath):
-    """Save models weights.
+    """Save model weights.
 
-    Same as models.save_weights(filepath), but supports saving to S3 or GCS
+    Same as model.save_weights(filepath), but supports saving to S3 or GCS
     buckets using TensorFlow GFile API.
 
     Args:
         model (tf.keras.Model): Model to save.
-        filepath (str): Path to save the models weights to.
+        filepath (str): Path to save the model weights to.
     """
     if not _path_requires_gfile(filepath):
         model.save_weights(filepath)
@@ -76,9 +76,9 @@ def save_weights(model, filepath):
 
 
 def load_weights(model, filepath):
-    """Load models weights.
+    """Load model weights.
 
-    Same as models.load_weights(filepath), but supports loading from S3 or GCS
+    Same as model.load_weights(filepath), but supports loading from S3 or GCS
     buckets using TensorFlow GFile API.
 
     Args:
