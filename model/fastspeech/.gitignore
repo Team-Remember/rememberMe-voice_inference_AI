@@ -132,7 +132,7 @@ dmypy.json
 .pyre/
 
 log/
-ckpt/
+#ckpt/
 results/
 eval/
 vocoder/pretrained_models/

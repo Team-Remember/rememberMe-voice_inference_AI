@@ -54,7 +54,7 @@ def voice_chat_bot_inference(userId: int, weId: int, filtering: int, text: str,
         tts_wav = tts_voice(text, user_id, we_id)
     final = time.time()
     print('chat_response', text, "최종 시간", final - start)
-    # background_tasks.add_task(os.remove, tts_wav)
+    background_tasks.add_task(os.remove, tts_wav)
     return FileResponse('./results/{}_{}.wav'.format(user_id, we_id), media_type='audio/wav',
                         background=background_tasks)
 
