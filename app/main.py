@@ -6,8 +6,8 @@ from fastapi import Request, BackgroundTasks, FastAPI
 from fastapi.responses import FileResponse
 
 from app.stt import byte_to_wav, stt
-from model.fastspeech.synthesize import synthesize_voice
-from app.voice_infrence import tts
+from app.tts_voice import tts_voice
+from app.tts_kss import tts
 
 logging = getLogger(__name__)
 app = FastAPI()
@@ -51,7 +51,7 @@ def voice_chat_bot_inference(userId: int, weId: int, filtering: int, text: str,
         tts_wav = tts(user_id, weId, text)
     else:
         # 욕설이 아닐 때 회은이 목소리
-        tts_wav = synthesize_voice(text, user_id, we_id)
+        tts_wav = tts_voice(text, user_id, we_id)
     final = time.time()
     print('chat_response', text, "최종 시간", final - start)
     # background_tasks.add_task(os.remove, tts_wav)
