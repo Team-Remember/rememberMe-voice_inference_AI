@@ -53,6 +53,7 @@ def voice_chat_bot_inference(userId: int, weId: int, filtering: int, text: str,
         # 욕설이 아닐 때 회은이 목소리
         tts_wav = tts_voice(text, user_id, we_id)
     final = time.time()
+    print(tts_wav)
     print('chat_response', text, "최종 시간", final - start)
     background_tasks.add_task(os.remove, tts_wav)
     return FileResponse('./results/{}_{}.wav'.format(user_id, we_id), media_type='audio/wav',
