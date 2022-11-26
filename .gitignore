@@ -17,5 +17,5 @@ mlruns
 /src/model
 #tensorflow_tts/
 results/
-model/fastspeech/vocgan_kss_pretrained_model_epoch_4500.pt
+#model/fastspeech/vocgan_kss_pretrained_model_epoch_4500.pt
 model/fastspeech/ckpt
