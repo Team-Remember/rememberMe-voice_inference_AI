@@ -122,3 +122,5 @@ def synthesize_voice(text, user_id, we_id):
     for s in sentence:
         text = kor_preprocess(s)
         synthesize(model, vocoder, text, s, user_id, we_id, prefix='step_{}'.format(args.step))
+
+    return f'./results/{user_id}_{we_id}.wav'
